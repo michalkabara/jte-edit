@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Form } from "../App";
-import { TextField } from "@mui/material";
+import { Grid, TextField } from "@mui/material";
 
 export const FormFields = () => {
   const [formDetails, setFormDetails] = useState<Form | undefined>();
@@ -41,13 +41,12 @@ export const FormFields = () => {
   };
 
   return (
-    <div className="flex flex-col gap-7 w-[800px]">
+    <div className="flex flex-col gap-7 w-full">
       {formDetails?.fields.map((field) => (
         <TextField
           key={field.fieldName}
           defaultValue={field.fieldValue}
           variant="outlined"
-          size="medium"
           fullWidth
           label={camelToFlat(field.fieldName).replaceAll("-", " ")}
         />
