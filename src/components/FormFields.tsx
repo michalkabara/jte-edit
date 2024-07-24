@@ -47,6 +47,12 @@ export const FormFields: React.FC<{ regId: string; eventURL: string; handleSaveV
     return flat;
   };
 
+  const handleReloadAndRemoveParams = () => {
+    const clearURL = window.location.href.split("?")[0];
+    window.history.pushState({}, null, clearURL);
+    location.reload();
+  };
+
   return (
     <div className="flex flex-col gap-7 sm:w-2/5 px-5 m-auto mt-8 top-0">
       {formDetails?.fields.map((field) => (
@@ -66,7 +72,7 @@ export const FormFields: React.FC<{ regId: string; eventURL: string; handleSaveV
           </Button>
         )}
         <Button
-          onClick={() => location.reload()}
+          onClick={handleReloadAndRemoveParams}
           size="large"
           variant="contained"
           color="warning"

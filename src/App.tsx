@@ -2,7 +2,7 @@ import "./App.css";
 import { FieldType } from "./types";
 import { FormFields } from "./components/FormFields";
 import Modal from "./components/Modal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@mui/material";
 import { Header } from "./components/Header";
 import { Login } from "./components/Login";
@@ -19,11 +19,21 @@ export interface Form {
   fields: Field[];
 }
 
+const urlParams = new URLSearchParams(window.location.search);
+
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLogged, setIsLogged] = useState(false);
-  const [regId, setRegId] = useState("");
-  const [eventURL, setEventURL] = useState("");
+  const [regId, setRegId] = useState(urlParams.get("id"));
+  const [eventURL, setEventURL] = useState(urlParams.get("url"));
+
+  useEffect(() => {
+    console.log(urlParams.get("url"));
+    console.log(urlParams.get("id"));
+    if (regId !== null && eventURL !== null) {
+      handleLogin();
+    }
+  }, []);
 
   const handleSaveValues = () => {
     setIsModalOpen(true);
@@ -35,6 +45,10 @@ function App() {
 
   const handleLogin = () => {
     setIsLogged(true);
+    urlParams.set("url", eventURL);
+    urlParams.set("id", regId);
+    // window.location.search = urlParams;
+    window.history.pushState({}, null, `?${urlParams}`);
   };
 
   return (
