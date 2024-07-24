@@ -1,33 +1,29 @@
 import { Button } from "@mui/material";
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ModalRef } from "../types";
 
-const Modal = forwardRef<ModalRef>(function Modal(_, ref) {
+const Modal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
   const dialog = useRef<HTMLDialogElement>();
 
-  useImperativeHandle(ref, () => {
-    return {
-      open: () => {
-        dialog.current?.showModal();
-      },
-      close: () => {
-        dialog.current?.close();
-      },
-    };
-  });
+  useEffect(() => {
+    if (open) {
+      dialog.current?.showModal();
+    } else {
+      dialog.current?.close();
+    }
+  }, [open]);
 
   return createPortal(
-    <dialog className="modal" ref={dialog}>
+    <dialog className="modal sm:w-1/3" ref={dialog} onClose={onClose}>
       <div className="p-8 text-center">
         <p className="mb-5">Twoje dane zostały zapisane.</p>
-        <Button color="info" onClick={() => dialog.current?.close()} variant="contained">
+        <Button color="info" onClick={onClose} variant="contained">
           OK
         </Button>
       </div>
     </dialog>,
     document.getElementById("modal")
   );
-});
+};
 
 export default Modal;

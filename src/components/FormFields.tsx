@@ -1,23 +1,30 @@
 import { useEffect, useState } from "react";
 
 import { Form } from "../App";
-import { Grid, TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 
-export const FormFields = () => {
+export const FormFields: React.FC<{ regId: string; eventURL: string; handleSaveValues: () => void }> = ({
+  regId,
+  eventURL,
+  handleSaveValues,
+}) => {
   const [formDetails, setFormDetails] = useState<Form | undefined>();
   const [fetchingData, setFetchingData] = useState<boolean>(true);
+  const [error, setError] = useState(null);
+
+  // "https://apiv2.jte.io/api/public/app/oees2024.jte.io/e09d4a7f-0630-4122-a520-07af2c25112e"
 
   useEffect(() => {
     const fetchFormData = async () => {
       try {
-        const response = await fetch(
-          "https://apiv2.jte.io/api/public/app/oees2024.jte.io/e09d4a7f-0630-4122-a520-07af2c25112e"
-        );
+        const response = await fetch(`${import.meta.env.VITE_API_URL}${eventURL}/${regId}`);
         const data = await response.json();
         setFormDetails(data);
         setFetchingData(false);
         console.log(formDetails);
       } catch (error) {
+        setError(error);
+        setFetchingData(false);
         console.log(error);
       }
     };
@@ -26,7 +33,7 @@ export const FormFields = () => {
   }, []);
 
   if (fetchingData) {
-    return <p>Loading fields...</p>;
+    return <p>Ładowanie danych</p>;
   }
 
   const camelToFlat = (camel: string) => {
@@ -41,7 +48,7 @@ export const FormFields = () => {
   };
 
   return (
-    <div className="flex flex-col gap-7 w-full">
+    <div className="flex flex-col gap-7 sm:w-2/5 px-5 m-auto mt-8 top-0">
       {formDetails?.fields.map((field) => (
         <TextField
           key={field.fieldName}
@@ -51,6 +58,23 @@ export const FormFields = () => {
           label={camelToFlat(field.fieldName).replaceAll("-", " ")}
         />
       ))}
+      {error && <p>Zły adres wydarzenia lub id rejestracji</p>}
+      <div className="flex flex-row gap-5 m-auto">
+        {!error && (
+          <Button onClick={handleSaveValues} size="large" variant="contained" color="success" className="normal-case">
+            Zapisz
+          </Button>
+        )}
+        <Button
+          onClick={() => location.reload()}
+          size="large"
+          variant="contained"
+          color="warning"
+          className="normal-case"
+        >
+          Wróć
+        </Button>
+      </div>
     </div>
   );
 };
