@@ -3,7 +3,6 @@ import { FieldType } from "./types";
 import { FormFields } from "./components/FormFields";
 import Modal from "./components/Modal";
 import { useEffect, useState } from "react";
-import { Button } from "@mui/material";
 import { Header } from "./components/Header";
 import { Login } from "./components/Login";
 
@@ -19,18 +18,16 @@ export interface Form {
   fields: Field[];
 }
 
-const urlParams = new URLSearchParams(window.location.search);
+const urlDetails = window.location.pathname.split("/");
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLogged, setIsLogged] = useState(false);
-  const [regId, setRegId] = useState(urlParams.get("id"));
-  const [eventURL, setEventURL] = useState(urlParams.get("url"));
+  const [regId, setRegId] = useState(urlDetails[2]);
+  const [eventURL, setEventURL] = useState(urlDetails[1]);
 
   useEffect(() => {
-    console.log(urlParams.get("url"));
-    console.log(urlParams.get("id"));
-    if (regId !== null && eventURL !== null) {
+    if (regId !== undefined && eventURL !== undefined) {
       handleLogin();
     }
   }, []);
@@ -45,10 +42,10 @@ function App() {
 
   const handleLogin = () => {
     setIsLogged(true);
-    urlParams.set("url", eventURL);
-    urlParams.set("id", regId);
-    // window.location.search = urlParams;
-    window.history.pushState({}, null, `?${urlParams}`);
+    // urlParams.set("url", eventURL);
+    // urlParams.set("id", regId);
+    const urlWithParams = `${window.location.origin}/${eventURL}/${regId}`;
+    window.history.pushState({}, null, urlWithParams);
   };
 
   return (
@@ -59,7 +56,6 @@ function App() {
         <>
           <Header />
           <Modal onClose={handleCloseModal} open={isModalOpen} />
-
           <FormFields regId={regId} eventURL={eventURL} handleSaveValues={handleSaveValues} />
         </>
       )}

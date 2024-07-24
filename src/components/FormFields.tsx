@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Form } from "../App";
 import { Button, TextField } from "@mui/material";
 
-export const FormFields: React.FC<{ regId: string; eventURL: string; handleSaveValues: () => void }> = ({
+export const FormFields: React.FC<{ regId: string | null; eventURL: string | null; handleSaveValues: () => void }> = ({
   regId,
   eventURL,
   handleSaveValues,
@@ -21,7 +21,6 @@ export const FormFields: React.FC<{ regId: string; eventURL: string; handleSaveV
         const data = await response.json();
         setFormDetails(data);
         setFetchingData(false);
-        console.log(formDetails);
       } catch (error) {
         setError(error);
         setFetchingData(false);
@@ -48,7 +47,7 @@ export const FormFields: React.FC<{ regId: string; eventURL: string; handleSaveV
   };
 
   const handleReloadAndRemoveParams = () => {
-    const clearURL = window.location.href.split("?")[0];
+    const clearURL = window.location.origin;
     window.history.pushState({}, null, clearURL);
     location.reload();
   };
