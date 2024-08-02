@@ -37,9 +37,9 @@ export const FormFields: React.FC<{ regId: string | null; eventURL: string | nul
       const newFieldValue = updatedEntries.find((newField) => newField.fieldName === field.fieldName);
       return { ...field, fieldValue: newFieldValue?.fieldValue };
     });
-    console.log(payload);
+    // console.log(payload);
     const fields = { fields: [...payload] };
-    console.log(fields);
+    // console.log(fields);
 
     updateFormValues(fields);
   };
