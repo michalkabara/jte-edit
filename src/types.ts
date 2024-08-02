@@ -86,3 +86,26 @@ export interface ModalRef {
   open: () => void;
   close: () => void;
 }
+
+export interface Field {
+  id: string;
+  isLabelHtml: boolean;
+  label: string;
+  name: string;
+  options: [];
+  type: number;
+}
+
+export interface FieldValue {
+  fieldName: string;
+  fieldType: number;
+  fieldValue: string;
+}
+
+export interface Module {
+  duration: number;
+  endTime: string;
+  id: string;
+  name: string;
+  startTime: string;
+}

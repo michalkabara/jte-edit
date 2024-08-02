@@ -1,17 +1,10 @@
 import "./App.css";
-import { FieldType } from "./types";
 import { FormFields } from "./components/FormFields";
 import Modal from "./components/Modal";
 import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { Login } from "./components/Login";
-
-export interface Field {
-  fieldName: "string";
-  fieldValue: "string";
-  fieldType: FieldType;
-  isMergeField: boolean;
-}
+import { Field } from "./types";
 
 export interface Form {
   id: "string";
