@@ -20,7 +20,6 @@ export const FormFields: React.FC<{ regId: string | null; eventURL: string | nul
       updateData(`${import.meta.env.VITE_API_URL}${eventURL}/${regId}`, newData),
     onSuccess: (data) => {
       queryClient.invalidateQueries(["fieldsData"]);
-      console.log(data);
     },
   });
 
@@ -33,15 +32,23 @@ export const FormFields: React.FC<{ regId: string | null; eventURL: string | nul
     handleSaveValues();
     const updatedEntries = Object.entries(formEntries).map((entry) => ({ fieldName: entry[0], fieldValue: entry[1] }));
 
-    const payload = data.fields.map((field: FieldValue) => {
-      const newFieldValue = updatedEntries.find((newField) => newField.fieldName === field.fieldName);
-      return { ...field, fieldValue: newFieldValue?.fieldValue };
-    });
-    // console.log(payload);
-    const fields = { fields: [...payload] };
-    // console.log(fields);
+    const fields = data.fields
+      .map((field: FieldValue) => {
+        const newFieldValue = updatedEntries.find((newField) => newField.fieldName === field.fieldName);
 
-    updateFormValues(fields);
+        if (
+          field.fieldValue !== newFieldValue?.fieldValue &&
+          newFieldValue?.fieldValue !== undefined &&
+          newFieldValue.fieldValue !== ""
+        ) {
+          return { ...field, fieldValue: newFieldValue?.fieldValue };
+        } else return;
+      })
+      .filter((element: FieldValue) => element !== undefined);
+
+    const payload = { fields: [...fields], modules: [...data.modules] };
+
+    updateFormValues(payload);
   };
 
   return (
