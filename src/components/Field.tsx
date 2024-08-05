@@ -3,12 +3,16 @@ import { FieldType, FieldValue } from "../types";
 
 export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue }> = ({ field, fieldValue }) => {
   if (field.type === 17 || field.type === 7 || field.type === 16) {
+    const parser = new DOMParser();
+    const parsedLabel = parser.parseFromString(field.label, "text/html");
+    const labelMarkup = parsedLabel.querySelector("body")?.innerText;
+
     return (
       <FormControlLabel
         key={field.id}
         disabled
         control={<Checkbox checked={fieldValue.fieldValue !== "off"} />}
-        label={field.label}
+        label={labelMarkup}
       />
     );
   } else if (field.type === 18 || field.type === 19) {

@@ -114,6 +114,7 @@ export interface ModuleType {
   id: string;
   name: string;
   startTime: string;
+  isRemoved?: boolean;
 }
 
 export interface ModalType {

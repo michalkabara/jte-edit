@@ -18,7 +18,7 @@ export const Form: React.FC<{
   const queryClient = useQueryClient();
   const { isPending, error, data } = useFetchFormData(eventURL, regId);
   const { isPending: formFieldsPending, error: formFieldsError, data: formFields } = useFetchFormFields(eventURL);
-  const [modules, setModules] = useState({ modules: [], removedModules: [] });
+  const [modules, setModules] = useState<ModuleType[]>();
   const formRef = useRef();
 
   const formData = new FormData(formRef.current);
@@ -29,18 +29,20 @@ export const Form: React.FC<{
     e.preventDefault();
     const changedFields = checkFieldsAndModules();
 
+    const removedModules = modules?.filter((module) => module.isRemoved === true);
+
     const text = (
       <div className="flex flex-col gap-3">
         <div>
-          {changedFields.fields.length ? <p>Dane które zostały zmienione</p> : "Żadne dane nie zostały zmienione"}
+          {changedFields.fields.length ? <p>Dane które zostały zmienione</p> : <p>Żadne dane nie zostały zmienione</p>}
           {changedFields.fields.map((field) => (
             <p key={field.fieldName}>{field.fieldValue}</p>
           ))}
         </div>
-        <div>
-          {modules?.removedModules?.length && <p>Moduły które zostały usunięte</p>}
+        <div id="test">
+          {removedModules?.length ? <p>Moduły które zostały usunięte</p> : ""}
           <ul>
-            {modules?.removedModules?.map((module) => (
+            {removedModules?.map((module: ModuleType) => (
               <li className="text-xs" key={module.id}>
                 {module.name}
               </li>
@@ -57,12 +59,10 @@ export const Form: React.FC<{
       onAccept: () => confirmChanges(changedFields),
       acceptText: "Potwierdzam",
     }));
-
-    console.log(modules?.removedModules);
   };
 
   useEffect(() => {
-    setModules({ modules: data?.modules });
+    setModules(data?.modules);
   }, [data?.modules]);
 
   const { mutate: updateFormValues } = useMutation({
@@ -91,7 +91,9 @@ export const Form: React.FC<{
       })
       .filter((element: FieldValue) => element !== undefined);
 
-    const payload = { fields: [...fields], modules: modules.modules };
+    const filteredModules = modules?.filter((module: ModuleType) => module?.isRemoved !== true);
+
+    const payload = { fields: [...fields], modules: filteredModules };
 
     return payload;
   };
@@ -102,20 +104,22 @@ export const Form: React.FC<{
   };
 
   const handleRemoveModule = (id: string) => {
-    const newModules = modules.modules.filter((module: ModuleType) => module.id !== id);
-    const removedModule = modules.modules.find((module: ModuleType) => module.id === id);
-
-    setModules((prev) => {
-      return { removedModules: [removedModule], modules: newModules };
+    const newModules = modules.map((module: ModuleType) => {
+      if (module.id === id) {
+        return { ...module, isRemoved: !module.isRemoved };
+      }
+      return module;
     });
+
+    setModules(newModules);
     setIsModalOpen((prev) => ({ ...prev, isOpen: false }));
-    console.log(modules.removedModules);
   };
 
   const showRemoveModuleModal = (module: ModuleType) => {
     const text = (
       <div>
-        Czy na pewno chcesz usunąć moduł: <p className="text-sm mt-5">{module.name}</p>
+        Czy na pewno chcesz {module.isRemoved ? "przywrócić" : "usunąć"} moduł:{" "}
+        <p className="text-sm mt-5">{module.name}</p>
       </div>
     );
     setIsModalOpen({ isOpen: true, text: text, onAccept: () => handleRemoveModule(module.id), acceptText: "Tak" });
@@ -132,9 +136,9 @@ export const Form: React.FC<{
           return <Field key={field.id} field={field} fieldValue={fieldValue} />;
         })}
 
-        {modules?.modules?.length > 0 && <p>Moduły</p>}
+        {modules?.length > 0 && <p>Moduły</p>}
         <div className="grid grid-cols-1 gap-3 text-left">
-          {modules?.modules?.map((module: ModuleType) => (
+          {modules?.map((module: ModuleType) => (
             <Module key={module.id} module={module} showRemoveModuleModal={showRemoveModuleModal} />
           ))}
         </div>
