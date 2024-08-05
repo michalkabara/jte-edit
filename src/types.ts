@@ -1,6 +1,6 @@
 // React Imports
 
-export enum FieldType {
+export enum FieldEnum {
   Name = 0,
   Surname = 1,
   Email = 2,
@@ -87,12 +87,18 @@ export interface ModalRef {
   close: () => void;
 }
 
-export interface Field {
+export interface Option {
+  id: string;
+  label: string;
+  value: string;
+}
+
+export interface FieldType {
   id: string;
   isLabelHtml: boolean;
   label: string;
   name: string;
-  options: [];
+  options: Option[];
   type: number;
 }
 
@@ -102,10 +108,18 @@ export interface FieldValue {
   fieldValue: string;
 }
 
-export interface Module {
+export interface ModuleType {
   duration: number;
   endTime: string;
   id: string;
   name: string;
   startTime: string;
+}
+
+export interface ModalType {
+  open: boolean;
+  onClose?: () => void;
+  text?: string;
+  onAccept?: () => void;
+  acceptText?: string;
 }

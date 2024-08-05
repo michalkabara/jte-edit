@@ -19,7 +19,7 @@ export const Login: React.FC<{
     <div className="flex flex-col gap-5">
       <img src={jteLogo} alt="" className="w-[200px] m-auto" />
 
-      <form action="" className="flex flex-col gap-5 sm:w-1/3 m-auto">
+      <form action="" className="flex flex-col gap-5 sm:w-full md:w-2/5 w-full m-auto px-5">
         <TextField required variant="outlined" fullWidth label="Adres URL wydarzenia" onChange={handleChangeEventURL} />
         <TextField required variant="outlined" fullWidth label="Numer ID rejestracji" onChange={handleChangeId} />
         <div>
