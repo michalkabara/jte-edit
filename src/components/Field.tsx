@@ -1,7 +1,27 @@
-import { Checkbox, FormControl, FormControlLabel, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import {
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+} from "@mui/material";
 import { FieldType, FieldValue } from "../types";
+import { useState } from "react";
 
-export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue }> = ({ field, fieldValue }) => {
+export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue; checkFieldsAndModules: () => void }> = ({
+  field,
+  fieldValue,
+  checkFieldsAndModules,
+}) => {
+  const [selectValue, setSelectValue] = useState(fieldValue?.fieldValue);
+
+  const handleChange = (event: SelectChangeEvent) => {
+    setSelectValue(event.target.value as string);
+  };
+
   if (field.type === 17 || field.type === 7 || field.type === 16) {
     const parser = new DOMParser();
     const parsedLabel = parser.parseFromString(field.label, "text/html");
@@ -11,7 +31,7 @@ export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue }> = ({ 
       <FormControlLabel
         key={field.id}
         disabled
-        control={<Checkbox checked={fieldValue.fieldValue !== "off"} />}
+        control={<Checkbox checked={fieldValue?.fieldValue !== "off"} />}
         label={labelMarkup}
       />
     );
@@ -19,7 +39,7 @@ export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue }> = ({ 
     return (
       <FormControl fullWidth key={field.id}>
         <InputLabel>{field.label}</InputLabel>
-        <Select labelId={field.label} value={fieldValue.fieldValue} label={field.label}>
+        <Select name={field.name} labelId={field.label} value={selectValue} label={field.label} onChange={handleChange}>
           {field.options.map((option) => (
             <MenuItem key={option.id} value={option.value}>
               {option.label}
@@ -37,6 +57,7 @@ export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue }> = ({ 
       variant="outlined"
       fullWidth
       label={field.label}
+      onChange={checkFieldsAndModules}
     />
   );
 };

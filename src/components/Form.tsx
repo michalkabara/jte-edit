@@ -19,23 +19,25 @@ export const Form: React.FC<{
   const { isPending, error, data } = useFetchFormData(eventURL, regId);
   const { isPending: formFieldsPending, error: formFieldsError, data: formFields } = useFetchFormFields(eventURL);
   const [modules, setModules] = useState<ModuleType[]>();
+  const [changedData, setChangedData] = useState<{ fields: FieldValue[]; modules: ModuleType[] }>({
+    fields: [],
+    modules: [],
+  });
   const formRef = useRef();
-
   const formData = new FormData(formRef.current);
   const formEntries = Object.fromEntries(formData);
   const updatedEntries = Object.entries(formEntries).map((entry) => ({ fieldName: entry[0], fieldValue: entry[1] }));
 
   const handleSaveValues = (e: FormEvent) => {
     e.preventDefault();
-    const changedFields = checkFieldsAndModules();
 
     const removedModules = modules?.filter((module) => module.isRemoved === true);
 
     const text = (
       <div className="flex flex-col gap-3">
         <div>
-          {changedFields.fields.length ? <p>Dane które zostały zmienione</p> : <p>Żadne dane nie zostały zmienione</p>}
-          {changedFields.fields.map((field) => (
+          {changedData?.fields.length ? <p>Dane które zostały zmienione</p> : <p>Żadne dane nie zostały zmienione</p>}
+          {changedData?.fields.map((field) => (
             <p key={field.fieldName}>{field.fieldValue}</p>
           ))}
         </div>
@@ -56,7 +58,7 @@ export const Form: React.FC<{
       ...prev,
       isOpen: true,
       text: text,
-      onAccept: () => confirmChanges(changedFields),
+      onAccept: () => confirmChanges(removedModules),
       acceptText: "Potwierdzam",
     }));
   };
@@ -69,7 +71,7 @@ export const Form: React.FC<{
     mutationFn: (newData: { fields: FieldValue[] }) =>
       updateData(`${import.meta.env.VITE_API_URL}${eventURL}/${regId}`, newData),
     onSuccess: (data) => {
-      queryClient.invalidateQueries(["fieldsData"]);
+      queryClient.invalidateQueries({ queryKey: ["fieldsData"] });
       console.log(data);
     },
   });
@@ -91,11 +93,11 @@ export const Form: React.FC<{
       })
       .filter((element: FieldValue) => element !== undefined);
 
-    const filteredModules = modules?.filter((module: ModuleType) => module?.isRemoved !== true);
-
-    const payload = { fields: [...fields], modules: filteredModules };
-
-    return payload;
+    // const filteredModules = modules?.filter((module: ModuleType) => module?.isRemoved !== true);
+    const removedModules = modules?.filter((module) => module.isRemoved === true);
+    const payload = { fields: [...fields], modules: removedModules };
+    setChangedData(payload);
+    console.log(payload);
   };
 
   const confirmChanges = (payload) => {
@@ -112,6 +114,7 @@ export const Form: React.FC<{
     });
 
     setModules(newModules);
+    console.log(modules);
     setIsModalOpen((prev) => ({ ...prev, isOpen: false }));
   };
 
@@ -126,17 +129,19 @@ export const Form: React.FC<{
   };
 
   return (
-    <div className="flex flex-col gap-7 sm:w-2/3 md:w-3/5 w-full px-5 m-auto mt-8 top-0">
+    <div className="flex flex-col gap-7 sm:w-2/3 md:w-3/5 sm:max-w-[800px] w-full px-5 m-auto mt-8 top-0">
       {formFieldsError && <p>Błąd ładowania pól formularza</p>}
       {error && <p>Zły adres wydarzenia lub id rejestracji</p>}
       <form className="flex flex-col gap-7" onSubmit={handleSaveValues} ref={formRef}>
         {formFields?.map((field: FieldType) => {
           const fieldValue = data?.fields.find((fieldValue: FieldValue) => fieldValue.fieldName === field.name);
 
-          return <Field key={field.id} field={field} fieldValue={fieldValue} />;
+          return (
+            <Field key={field.id} field={field} fieldValue={fieldValue} checkFieldsAndModules={checkFieldsAndModules} />
+          );
         })}
 
-        {modules?.length > 0 && <p>Moduły</p>}
+        {modules && modules?.length > 0 && <p>Moduły</p>}
         <div className="grid grid-cols-1 gap-3 text-left">
           {modules?.map((module: ModuleType) => (
             <Module key={module.id} module={module} showRemoveModuleModal={showRemoveModuleModal} />

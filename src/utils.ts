@@ -14,7 +14,7 @@ export const updateData = async (url: string, payload: { fields: FieldValue[] })
   try {
     const response = await fetch(url, {
       method: "PUT",
-      headers: { accept: "application/json", "content-type": "application/*+json" },
+      headers: { accept: "application/json", "content-type": "application/json" },
       body: JSON.stringify(payload),
     });
     const data = await response.json();
