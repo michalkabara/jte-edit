@@ -11,11 +11,7 @@ import {
 import { FieldType, FieldValue } from "../types";
 import { useState } from "react";
 
-export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue; checkFieldsAndModules: () => void }> = ({
-  field,
-  fieldValue,
-  checkFieldsAndModules,
-}) => {
+export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue }> = ({ field, fieldValue }) => {
   const [selectValue, setSelectValue] = useState(fieldValue?.fieldValue);
 
   const handleChange = (event: SelectChangeEvent) => {
@@ -57,7 +53,6 @@ export const Field: React.FC<{ field: FieldType; fieldValue: FieldValue; checkFi
       variant="outlined"
       fullWidth
       label={field.label}
-      onChange={checkFieldsAndModules}
     />
   );
 };

@@ -19,29 +19,33 @@ export const Form: React.FC<{
   const { isPending, error, data } = useFetchFormData(eventURL, regId);
   const { isPending: formFieldsPending, error: formFieldsError, data: formFields } = useFetchFormFields(eventURL);
   const [modules, setModules] = useState<ModuleType[]>();
-  const [changedData, setChangedData] = useState<{ fields: FieldValue[]; modules: ModuleType[] }>({
-    fields: [],
-    modules: [],
-  });
+  // const [changedData, setChangedData] = useState<{ fields: FieldValue[]; modules: ModuleType[] }>({
+  //   fields: [],
+  //   modules: data?.modules,
+  // });
   const formRef = useRef();
-  const formData = new FormData(formRef.current);
-  const formEntries = Object.fromEntries(formData);
-  const updatedEntries = Object.entries(formEntries).map((entry) => ({ fieldName: entry[0], fieldValue: entry[1] }));
 
   const handleSaveValues = (e: FormEvent) => {
     e.preventDefault();
-
+    const payload = checkFieldsAndModules();
     const removedModules = modules?.filter((module) => module.isRemoved === true);
 
     const text = (
       <div className="flex flex-col gap-3">
         <div>
-          {changedData?.fields.length ? <p>Dane które zostały zmienione</p> : <p>Żadne dane nie zostały zmienione</p>}
-          {changedData?.fields.map((field) => (
-            <p key={field.fieldName}>{field.fieldValue}</p>
-          ))}
+          {payload?.fields.length ? <p>Dane które zostały zmienione</p> : <p>Żadne dane nie zostały zmienione</p>}
+          {payload?.fields.map((field) => {
+            const label = formFields.find((fieldLabel: FieldType) => fieldLabel.name === field.fieldName);
+
+            return (
+              <div key={field.fieldName} className="mt-3">
+                <span className="text-xs">{label.label}</span>
+                <p>{field.fieldValue}</p>
+              </div>
+            );
+          })}
         </div>
-        <div id="test">
+        <div className="mt-3">
           {removedModules?.length ? <p>Moduły które zostały usunięte</p> : ""}
           <ul>
             {removedModules?.map((module: ModuleType) => (
@@ -58,7 +62,7 @@ export const Form: React.FC<{
       ...prev,
       isOpen: true,
       text: text,
-      onAccept: () => confirmChanges(removedModules),
+      onAccept: () => confirmChanges(payload),
       acceptText: "Potwierdzam",
     }));
   };
@@ -70,16 +74,19 @@ export const Form: React.FC<{
   const { mutate: updateFormValues } = useMutation({
     mutationFn: (newData: { fields: FieldValue[] }) =>
       updateData(`${import.meta.env.VITE_API_URL}${eventURL}/${regId}`, newData),
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fieldsData"] });
-      console.log(data);
     },
   });
 
   if (isPending || formFieldsPending) return <p>Loading...</p>;
 
   const checkFieldsAndModules = () => {
-    const fields = data.fields
+    const formData = new FormData(formRef.current);
+    const formEntries = Object.fromEntries(formData);
+    const updatedEntries = Object.entries(formEntries).map((entry) => ({ fieldName: entry[0], fieldValue: entry[1] }));
+
+    const fields = data?.fields
       .map((field: FieldValue) => {
         const newFieldValue = updatedEntries.find((newField) => newField.fieldName === field.fieldName);
 
@@ -93,11 +100,12 @@ export const Form: React.FC<{
       })
       .filter((element: FieldValue) => element !== undefined);
 
-    // const filteredModules = modules?.filter((module: ModuleType) => module?.isRemoved !== true);
-    const removedModules = modules?.filter((module) => module.isRemoved === true);
-    const payload = { fields: [...fields], modules: removedModules };
-    setChangedData(payload);
-    console.log(payload);
+    const filteredModules = modules?.filter((module: ModuleType) => module?.isRemoved !== true);
+    // const removedModules = modules?.filter((module) => module.isRemoved === true);
+
+    const payload = { fields: [...fields], modules: filteredModules };
+    // setChangedData(payload);
+    return payload;
   };
 
   const confirmChanges = (payload) => {
@@ -106,7 +114,7 @@ export const Form: React.FC<{
   };
 
   const handleRemoveModule = (id: string) => {
-    const newModules = modules.map((module: ModuleType) => {
+    const newModules = modules?.map((module: ModuleType) => {
       if (module.id === id) {
         return { ...module, isRemoved: !module.isRemoved };
       }
@@ -114,7 +122,7 @@ export const Form: React.FC<{
     });
 
     setModules(newModules);
-    console.log(modules);
+    checkFieldsAndModules();
     setIsModalOpen((prev) => ({ ...prev, isOpen: false }));
   };
 
@@ -136,9 +144,7 @@ export const Form: React.FC<{
         {formFields?.map((field: FieldType) => {
           const fieldValue = data?.fields.find((fieldValue: FieldValue) => fieldValue.fieldName === field.name);
 
-          return (
-            <Field key={field.id} field={field} fieldValue={fieldValue} checkFieldsAndModules={checkFieldsAndModules} />
-          );
+          return <Field key={field.id} field={field} fieldValue={fieldValue} />;
         })}
 
         {modules && modules?.length > 0 && <p>Moduły</p>}
