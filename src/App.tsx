@@ -1,6 +1,5 @@
 import "./App.css";
 import { Form } from "./components/Form";
-import Modal from "./components/Modal";
 import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { Login } from "./components/Login";
@@ -14,12 +13,6 @@ export interface Form {
 const urlDetails = window.location.pathname.split("/");
 
 function App() {
-  const [isModalOpen, setIsModalOpen] = useState({
-    isOpen: false,
-    text: "",
-    acceptText: "OK",
-    onAccept: () => {},
-  });
   const [isLogged, setIsLogged] = useState(false);
   const [regId, setRegId] = useState(urlDetails[2]);
   const [eventURL, setEventURL] = useState(urlDetails[1]);
@@ -29,10 +22,6 @@ function App() {
       handleLogin();
     }
   }, []);
-
-  const handleCloseModal = () => {
-    setIsModalOpen((prev) => ({ ...prev, isOpen: false }));
-  };
 
   const handleLogin = () => {
     setIsLogged(true);
@@ -49,14 +38,7 @@ function App() {
       {isLogged && (
         <>
           <Header />
-          <Modal
-            onClose={handleCloseModal}
-            onAccept={isModalOpen.onAccept}
-            open={isModalOpen.isOpen}
-            text={isModalOpen.text}
-            acceptText={isModalOpen.acceptText}
-          />
-          <Form regId={regId} eventURL={eventURL} setIsModalOpen={setIsModalOpen} />
+          <Form regId={regId} eventURL={eventURL} />
         </>
       )}
     </>

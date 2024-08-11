@@ -120,7 +120,4 @@ export interface ModuleType {
 export interface ModalType {
   open: boolean;
   onClose?: () => void;
-  text?: string;
-  onAccept?: () => void;
-  acceptText?: string;
 }

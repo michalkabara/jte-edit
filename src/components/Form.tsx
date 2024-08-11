@@ -9,69 +9,29 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { Field } from "./Field";
 import { Button } from "@mui/material";
 import { Module } from "./Module";
+import Modal from "./Modal";
 
 export const Form: React.FC<{
   regId: string | null;
   eventURL: string | null;
-  setIsModalOpen: (prev: any) => void;
-}> = ({ regId, eventURL, setIsModalOpen }) => {
+}> = ({ regId, eventURL }) => {
   const queryClient = useQueryClient();
   const { isPending, error, data } = useFetchFormData(eventURL, regId);
   const { isPending: formFieldsPending, error: formFieldsError, data: formFields } = useFetchFormFields(eventURL);
   const [modules, setModules] = useState<ModuleType[]>();
-  // const [changedData, setChangedData] = useState<{ fields: FieldValue[]; modules: ModuleType[] }>({
-  //   fields: [],
-  //   modules: data?.modules,
-  // });
   const formRef = useRef();
-
-  const handleSaveValues = (e: FormEvent) => {
-    e.preventDefault();
-    const payload = checkFieldsAndModules();
-    const removedModules = modules?.filter((module) => module.isRemoved === true);
-
-    const text = (
-      <div className="flex flex-col gap-3">
-        <div>
-          {payload?.fields.length ? <p>Dane które zostały zmienione</p> : <p>Żadne dane nie zostały zmienione</p>}
-          {payload?.fields.map((field) => {
-            const label = formFields.find((fieldLabel: FieldType) => fieldLabel.name === field.fieldName);
-
-            return (
-              <div key={field.fieldName} className="mt-3">
-                <span className="text-xs">{label.label}</span>
-                <p>{field.fieldValue}</p>
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-3">
-          {removedModules?.length ? <p>Moduły które zostały usunięte</p> : ""}
-          <ul>
-            {removedModules?.map((module: ModuleType) => (
-              <li className="text-xs" key={module.id}>
-                {module.name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    );
-
-    setIsModalOpen((prev) => ({
-      ...prev,
-      isOpen: true,
-      text: text,
-      onAccept: () => confirmChanges(payload),
-      acceptText: "Potwierdzam",
-    }));
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<ReactNode | undefined>();
 
   useEffect(() => {
     setModules(data?.modules);
   }, [data?.modules]);
 
-  const { mutate: updateFormValues } = useMutation({
+  const {
+    mutate: updateFormValues,
+    isError,
+    isSuccess,
+  } = useMutation({
     mutationFn: (newData: { fields: FieldValue[] }) =>
       updateData(`${import.meta.env.VITE_API_URL}${eventURL}/${regId}`, newData),
     onSuccess: () => {
@@ -80,6 +40,83 @@ export const Form: React.FC<{
   });
 
   if (isPending || formFieldsPending) return <p>Loading...</p>;
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSaveValues = (e: FormEvent) => {
+    e.preventDefault();
+    const payload = checkFieldsAndModules();
+    const removedModules = modules?.filter((module) => module.isRemoved === true);
+
+    let changedFields;
+    let changedModules;
+
+    if (payload?.fields.length === 0) {
+      changedFields = (
+        <div>
+          <p>Żadne dane nie zostały zmienione</p>
+        </div>
+      );
+    } else {
+      changedFields = (
+        <div>
+          <p>Dane które zostały zmienione</p>
+          {payload?.fields.map((field) => {
+            const label = formFields.find((fieldLabel: FieldType) => fieldLabel.name === field.fieldName);
+            return (
+              <div key={field.fieldName} className="mt-3">
+                <span className="text-xs">{label.label}</span>
+                <p>{field.fieldValue}</p>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (removedModules?.length === 0) {
+      changedModules = "";
+    } else {
+      changedModules = (
+        <div className="mt-3">
+          <p>Moduły które zostały usunięte</p>
+          <ul>
+            {removedModules?.map((module: ModuleType) => (
+              <li className="text-xs" key={module.id}>
+                {module.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    const content = (
+      <div className="flex flex-col gap-3">
+        {changedFields}
+        {changedModules}
+        <div className="flex flex-row gap-5 justify-center mt-3">
+          {payload.fields.length === 0 && removedModules?.length === 0 ? (
+            <Button color="success" onClick={handleCloseModal} variant="contained">
+              OK
+            </Button>
+          ) : (
+            <Button color="success" onClick={() => confirmChanges(payload)} variant="contained">
+              Potwierdzam
+            </Button>
+          )}
+
+          <Button color="error" onClick={handleCloseModal} variant="contained">
+            Wróć
+          </Button>
+        </div>
+      </div>
+    );
+    setModalContent(content);
+    setIsModalOpen(true);
+  };
 
   const checkFieldsAndModules = () => {
     const formData = new FormData(formRef.current);
@@ -104,13 +141,29 @@ export const Form: React.FC<{
     // const removedModules = modules?.filter((module) => module.isRemoved === true);
 
     const payload = { fields: [...fields], modules: filteredModules };
-    // setChangedData(payload);
     return payload;
   };
 
   const confirmChanges = (payload) => {
+    const content = (
+      <div>
+        <>
+          {isSuccess && <div>Dane został zapisane</div>}
+          {isPending && <div>Wysyłanie danych...</div>}
+          {isError && <div>Wystąpił Błąd</div>}
+        </>
+        {!isPending && (
+          <div className="flex flex-row gap-5 justify-center mt-5">
+            <Button color="success" onClick={handleCloseModal} variant="contained">
+              OK
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+    setModalContent(content);
+    setIsModalOpen(true);
     updateFormValues(payload);
-    setIsModalOpen((prev) => ({ ...prev, isOpen: false }));
   };
 
   const handleRemoveModule = (id: string) => {
@@ -123,54 +176,87 @@ export const Form: React.FC<{
 
     setModules(newModules);
     checkFieldsAndModules();
-    setIsModalOpen((prev) => ({ ...prev, isOpen: false }));
+    setIsModalOpen(false);
   };
 
   const showRemoveModuleModal = (module: ModuleType) => {
-    const text = (
+    const content = (
       <div>
-        Czy na pewno chcesz {module.isRemoved ? "przywrócić" : "usunąć"} moduł:{" "}
-        <p className="text-sm mt-5">{module.name}</p>
+        Czy na pewno chcesz {module.isRemoved ? "przywrócić" : "usunąć"} moduł:
+        <p className="text-sm my-5">{module.name}</p>
+        <div className="flex flex-row gap-5 justify-center">
+          <Button color="success" onClick={() => handleRemoveModule(module.id)} variant="contained">
+            Tak
+          </Button>
+          <Button color="error" onClick={handleCloseModal} variant="contained">
+            Nie
+          </Button>
+        </div>
       </div>
     );
-    setIsModalOpen({ isOpen: true, text: text, onAccept: () => handleRemoveModule(module.id), acceptText: "Tak" });
+
+    setModalContent(content);
+    setIsModalOpen(true);
   };
 
   return (
-    <div className="flex flex-col gap-7 sm:w-2/3 md:w-3/5 sm:max-w-[800px] w-full px-5 m-auto mt-8 top-0">
-      {formFieldsError && <p>Błąd ładowania pól formularza</p>}
-      {error && <p>Zły adres wydarzenia lub id rejestracji</p>}
-      <form className="flex flex-col gap-7" onSubmit={handleSaveValues} ref={formRef}>
-        {formFields?.map((field: FieldType) => {
-          const fieldValue = data?.fields.find((fieldValue: FieldValue) => fieldValue.fieldName === field.name);
+    <>
+      <Modal onClose={handleCloseModal} open={isModalOpen}>
+        {modalContent}
+      </Modal>
 
-          return <Field key={field.id} field={field} fieldValue={fieldValue} />;
-        })}
+      <div className="flex flex-col gap-7 sm:w-2/3 md:w-3/5 sm:max-w-[800px] w-full px-5 m-auto mt-8 top-0">
+        {formFieldsError && <p className="text-center">Błąd ładowania pól formularza</p>}
+        {error && <p className="text-center">Zły adres wydarzenia lub id rejestracji</p>}
+        {!formFieldsError && !error && (
+          <form className="flex flex-col gap-7" onSubmit={handleSaveValues} ref={formRef}>
+            {formFields?.map((field: FieldType) => {
+              const fieldValue = data?.fields.find((fieldValue: FieldValue) => fieldValue.fieldName === field.name);
 
-        {modules && modules?.length > 0 && <p>Moduły</p>}
-        <div className="grid grid-cols-1 gap-3 text-left">
-          {modules?.map((module: ModuleType) => (
-            <Module key={module.id} module={module} showRemoveModuleModal={showRemoveModuleModal} />
-          ))}
-        </div>
+              return <Field key={field.id} field={field} fieldValue={fieldValue} />;
+            })}
 
-        <div className="flex flex-row gap-5 m-auto">
-          {!error && (
-            <Button type="submit" size="large" variant="contained" color="success" className="normal-case">
-              Zapisz
+            {modules && modules?.length > 0 && <p>Moduły</p>}
+            <div className="grid grid-cols-1 gap-3 text-left">
+              {modules?.map((module: ModuleType) => (
+                <Module key={module.id} module={module} showRemoveModuleModal={showRemoveModuleModal} />
+              ))}
+            </div>
+
+            <div className="flex flex-row gap-5 m-auto">
+              {!error && (
+                <Button type="submit" size="large" variant="contained" color="success" className="normal-case">
+                  Zapisz
+                </Button>
+              )}
+              <Button
+                onClick={handleReloadAndRemoveParams}
+                size="large"
+                variant="contained"
+                color="warning"
+                className="normal-case"
+              >
+                Wróć
+              </Button>
+            </div>
+          </form>
+        )}
+        {formFieldsError || error ? (
+          <div className="flex flex-row gap-5 m-auto">
+            <Button
+              onClick={handleReloadAndRemoveParams}
+              size="large"
+              variant="contained"
+              color="warning"
+              className="normal-case"
+            >
+              Wróć
             </Button>
-          )}
-          <Button
-            onClick={handleReloadAndRemoveParams}
-            size="large"
-            variant="contained"
-            color="warning"
-            className="normal-case"
-          >
-            Wróć
-          </Button>
-        </div>
-      </form>
-    </div>
+          </div>
+        ) : (
+          ""
+        )}
+      </div>
+    </>
   );
 };

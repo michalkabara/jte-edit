@@ -1,9 +1,8 @@
-import { Button } from "@mui/material";
-import { useEffect, useRef } from "react";
+import { PropsWithChildren, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ModalType } from "../types";
 
-const Modal: React.FC<ModalType> = ({ open, onClose, text, onAccept, acceptText }) => {
+const Modal: React.FC<ModalType & PropsWithChildren> = ({ open, onClose, children }) => {
   const dialog = useRef<HTMLDialogElement>();
 
   useEffect(() => {
@@ -16,19 +15,7 @@ const Modal: React.FC<ModalType> = ({ open, onClose, text, onAccept, acceptText 
 
   return createPortal(
     <dialog className="modal sm:w-1/3" ref={dialog} onClose={onClose}>
-      <div className="p-8 text-center">
-        <div className="mb-5">{text}</div>
-        <div className="flex flex-row gap-5 justify-center">
-          <Button color="success" onClick={onAccept} variant="contained">
-            {acceptText}
-          </Button>
-          {onClose && (
-            <Button color="error" onClick={onClose} variant="contained">
-              Nie
-            </Button>
-          )}
-        </div>
-      </div>
+      <div className="p-8 text-center">{children}</div>
     </dialog>,
     document.getElementById("modal")
   );
