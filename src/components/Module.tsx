@@ -2,11 +2,14 @@ import { FaRegTrashAlt, FaUndoAlt } from "react-icons/fa";
 
 import { ModuleType } from "../types";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
 export const Module: React.FC<{ module: ModuleType; showRemoveModuleModal: (module: ModuleType) => void }> = ({
   module,
   showRemoveModuleModal,
 }) => {
+  dayjs.extend(utc);
+
   return (
     <div
       key={module.id}
@@ -16,7 +19,7 @@ export const Module: React.FC<{ module: ModuleType; showRemoveModuleModal: (modu
     >
       <div className="flex flex-col gap-2">
         <span className="text-sm">{module.name}</span>
-        <span className="text-xs">{dayjs(module.startTime).format("DD.MM.YYYY HH:mm")}</span>
+        <span className="text-xs">{dayjs.utc(module.startTime).format("DD.MM.YYYY HH:mm")}</span>
       </div>
       <button type="button" onClick={() => showRemoveModuleModal(module)}>
         {module.isRemoved ? <FaUndoAlt className="text-neutral-800" /> : <FaRegTrashAlt className="text-red-600" />}
