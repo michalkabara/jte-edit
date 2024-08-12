@@ -5,11 +5,12 @@ import { useFetchFormFields } from "../hooks/useFetchFormFields";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { Field } from "./Field";
 import { Button } from "@mui/material";
 import { Module } from "./Module";
 import Modal from "./Modal";
+import { ResponseModal } from "./ResponseModal";
 
 export const Form: React.FC<{
   regId: string | null;
@@ -19,7 +20,7 @@ export const Form: React.FC<{
   const { isPending, error, data } = useFetchFormData(eventURL, regId);
   const { isPending: formFieldsPending, error: formFieldsError, data: formFields } = useFetchFormFields(eventURL);
   const [modules, setModules] = useState<ModuleType[]>();
-  const formRef = useRef();
+  const formRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<ReactNode | undefined>();
 
@@ -31,6 +32,7 @@ export const Form: React.FC<{
     mutate: updateFormValues,
     isError,
     isSuccess,
+    isPending: isResponsePending,
   } = useMutation({
     mutationFn: (newData: { fields: FieldValue[] }) =>
       updateData(`${import.meta.env.VITE_API_URL}${eventURL}/${regId}`, newData),
@@ -144,21 +146,14 @@ export const Form: React.FC<{
     return payload;
   };
 
-  const confirmChanges = (payload) => {
+  const confirmChanges = (payload: { fields: FieldValue[] }) => {
     const content = (
       <div>
-        <>
-          {isSuccess && <div>Dane został zapisane</div>}
-          {isPending && <div>Wysyłanie danych...</div>}
-          {isError && <div>Wystąpił Błąd</div>}
-        </>
-        {!isPending && (
-          <div className="flex flex-row gap-5 justify-center mt-5">
-            <Button color="success" onClick={handleCloseModal} variant="contained">
-              OK
-            </Button>
-          </div>
-        )}
+        <div className="flex flex-row gap-5 justify-center mt-5">
+          <Button color="success" onClick={handleCloseModal} variant="contained">
+            OK
+          </Button>
+        </div>
       </div>
     );
     setModalContent(content);
@@ -202,6 +197,7 @@ export const Form: React.FC<{
   return (
     <>
       <Modal onClose={handleCloseModal} open={isModalOpen}>
+        <ResponseModal isResponsePending={isResponsePending} isError={isError} isSuccess={isSuccess} />
         {modalContent}
       </Modal>
 
