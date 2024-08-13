@@ -23,6 +23,7 @@ export const Form: React.FC<{
   const formRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<ReactNode | undefined>();
+  const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
 
   useEffect(() => {
     setModules(data?.modules);
@@ -147,17 +148,8 @@ export const Form: React.FC<{
   };
 
   const confirmChanges = (payload: { fields: FieldValue[] }) => {
-    const content = (
-      <div>
-        <div className="flex flex-row gap-5 justify-center mt-5">
-          <Button color="success" onClick={handleCloseModal} variant="contained">
-            OK
-          </Button>
-        </div>
-      </div>
-    );
-    setModalContent(content);
-    setIsModalOpen(true);
+    setIsModalOpen(false);
+    setIsResponseModalOpen(true);
     updateFormValues(payload);
   };
 
@@ -189,7 +181,6 @@ export const Form: React.FC<{
         </div>
       </div>
     );
-
     setModalContent(content);
     setIsModalOpen(true);
   };
@@ -197,8 +188,17 @@ export const Form: React.FC<{
   return (
     <>
       <Modal onClose={handleCloseModal} open={isModalOpen}>
-        <ResponseModal isResponsePending={isResponsePending} isError={isError} isSuccess={isSuccess} />
         {modalContent}
+      </Modal>
+      <Modal onClose={() => setIsResponseModalOpen(false)} open={isResponseModalOpen}>
+        <ResponseModal isResponsePending={isResponsePending} isError={isError} isSuccess={isSuccess} />
+        <div>
+          <div className="flex flex-row gap-5 justify-center mt-5">
+            <Button color="success" onClick={() => setIsResponseModalOpen(false)} variant="contained">
+              OK
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       <div className="flex flex-col gap-7 sm:w-2/3 md:w-3/5 sm:max-w-[800px] w-full px-5 m-auto mt-8 top-0">

@@ -9,7 +9,7 @@ export const ResponseModal: React.FC<{ isResponsePending: boolean; isError: bool
         <div>Wysyłanie danych...</div>
       ) : (
         <>
-          {isError ? <div>Wystąpił Błąd</div> : null} {isSuccess ? <div>Dane został zapisane</div> : null}
+          {isError ? <div>Wystąpił Błąd</div> : null} {isSuccess ? <div>Dane zostały zapisane</div> : null}
         </>
       )}
     </>
