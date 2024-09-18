@@ -39,6 +39,7 @@ export const Form: React.FC<{
       updateData(`${import.meta.env.VITE_API_URL}${eventURL}/${regId}`, newData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fieldsData"] });
+      queryClient.invalidateQueries({ queryKey: ["formData"] });
     },
   });
 
